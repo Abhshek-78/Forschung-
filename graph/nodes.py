@@ -4,7 +4,7 @@ from tools.academic_search import (
 )
 
 from tools.pdf_reader import read_pdf
-
+from tools.evidence_processor import process_corpus
 from graph.state import ResearchState
 
 
@@ -38,7 +38,7 @@ def academic_search_node(
 
         arxiv_papers = search_arxiv_papers(
             topic,
-            max_results=5
+            max_results=3
         )
 
         print(
@@ -69,7 +69,7 @@ def academic_search_node(
         semantic_papers = (
             search_semantic_scholar_papers(
                 topic,
-                max_results=5
+                max_results=3
             )
         )
 
@@ -226,4 +226,89 @@ def paper_reader_node(
         **state,
         "corpus": corpus,
         "errors": errors
+    }
+# ============================================================
+# EVIDENCE PROCESSOR NODE
+# ============================================================
+
+def evidence_processor_node(
+    state: ResearchState
+) -> ResearchState:
+
+    print("\n")
+    print("=" * 70)
+    print("EVIDENCE PROCESSOR NODE")
+    print("=" * 70)
+
+    corpus = state.get(
+        "corpus",
+        []
+    )
+
+    if not corpus:
+
+        print(
+            "\n⚠ No extracted papers available."
+        )
+
+        return {
+            **state,
+            "evidence_chunks": []
+        }
+
+    print(
+        f"\nProcessing "
+        f"{len(corpus)} papers..."
+    )
+
+    evidence_chunks = process_corpus(
+        corpus
+    )
+
+    print(
+        f"✓ Evidence processing completed."
+    )
+
+    print(
+        f"✓ Total evidence chunks: "
+        f"{len(evidence_chunks)}"
+    )
+
+    # --------------------------------------------------------
+    # Show a small preview
+    # --------------------------------------------------------
+
+    if evidence_chunks:
+
+        print("\nEvidence Preview:")
+
+        for chunk in evidence_chunks[:3]:
+
+            print(
+                "\n--------------------------------------------------"
+            )
+
+            print(
+                f"Chunk ID: "
+                f"{chunk['chunk_id']}"
+            )
+
+            print(
+                f"Paper: "
+                f"{chunk['title']}"
+            )
+
+            print(
+                f"Page: "
+                f"{chunk['page_number']}"
+            )
+
+            print(
+                f"Text: "
+                f"{chunk['text'][:300]}..."
+            )
+
+    return {
+        **state,
+        "evidence_chunks": evidence_chunks
     }

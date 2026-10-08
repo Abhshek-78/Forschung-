@@ -21,7 +21,7 @@ def main():
         return
 
     # --------------------------------------------------------
-    # Build LangGraph
+    # Build graph
     # --------------------------------------------------------
 
     graph = build_research_graph()
@@ -38,11 +38,13 @@ def main():
 
         "corpus": [],
 
+        "evidence_chunks": [],
+
         "errors": []
     }
 
     # --------------------------------------------------------
-    # Execute graph
+    # Run LangGraph
     # --------------------------------------------------------
 
     final_state = graph.invoke(
@@ -87,6 +89,16 @@ def main():
     )
 
     print(
+        "Evidence chunks:",
+        len(
+            final_state.get(
+                "evidence_chunks",
+                []
+            )
+        )
+    )
+
+    print(
         "Errors:",
         len(
             final_state.get(
@@ -97,29 +109,7 @@ def main():
     )
 
     # --------------------------------------------------------
-    # Print errors
-    # --------------------------------------------------------
-
-    errors = final_state.get(
-        "errors",
-        []
-    )
-
-    if errors:
-
-        print("\n")
-        print("=" * 70)
-        print("ERRORS / SKIPPED PAPERS")
-        print("=" * 70)
-
-        for error in errors:
-
-            print(
-                f"\n- {error}"
-            )
-
-    # --------------------------------------------------------
-    # Print paper summary
+    # Paper summary
     # --------------------------------------------------------
 
     papers = final_state.get(
@@ -141,22 +131,22 @@ def main():
 
             print(
                 f"\n{index}. "
-                f"{paper.get('title', 'Unknown')}"
+                f"{paper.get('title')}"
             )
 
             print(
                 f"   Source: "
-                f"{paper.get('source', 'Unknown')}"
+                f"{paper.get('source')}"
             )
 
             print(
                 f"   Year: "
-                f"{paper.get('year', 'Unknown')}"
+                f"{paper.get('year')}"
             )
 
             print(
                 f"   URL: "
-                f"{paper.get('paper_url', 'N/A')}"
+                f"{paper.get('paper_url')}"
             )
 
 

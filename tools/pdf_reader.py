@@ -1,7 +1,7 @@
 import os
 import re
 import requests
-import fitz
+import pymupdf
 
 
 PAPERS_DIR = "papers"
@@ -48,9 +48,13 @@ def download_pdf(
         f"{filename}.pdf"
     )
 
+    print(
+        "Downloading PDF..."
+    )
+
     response = requests.get(
         pdf_url,
-        timeout=60,
+        timeout=30,
         headers={
             "User-Agent":
             "AcademicResearchAgent/1.0"
@@ -79,11 +83,19 @@ def extract_pdf_text(
     filepath: str
 ) -> str:
 
-    document = fitz.open(filepath)
+    print(
+        "Extracting PDF text..."
+    )
+
+    document = pymupdf.open(
+        filepath
+    )
 
     pages = []
 
-    for page_number, page in enumerate(document):
+    for page_number, page in enumerate(
+        document
+    ):
 
         text = page.get_text()
 
@@ -97,7 +109,9 @@ def extract_pdf_text(
 
     document.close()
 
-    return "\n".join(pages)
+    return "\n".join(
+        pages
+    )
 
 
 # ============================================================

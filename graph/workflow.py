@@ -8,13 +8,10 @@ from graph.state import ResearchState
 
 from graph.nodes import (
     academic_search_node,
-    paper_reader_node
+    paper_reader_node,
+    evidence_processor_node
 )
 
-
-# ============================================================
-# BUILD RESEARCH GRAPH
-# ============================================================
 
 def build_research_graph():
 
@@ -22,9 +19,9 @@ def build_research_graph():
         ResearchState
     )
 
-    # --------------------------------------------------------
-    # Add Nodes
-    # --------------------------------------------------------
+    # ========================================================
+    # NODES
+    # ========================================================
 
     graph.add_node(
         "academic_search",
@@ -36,9 +33,14 @@ def build_research_graph():
         paper_reader_node
     )
 
-    # --------------------------------------------------------
-    # Define Flow
-    # --------------------------------------------------------
+    graph.add_node(
+        "evidence_processor",
+        evidence_processor_node
+    )
+
+    # ========================================================
+    # EDGES
+    # ========================================================
 
     graph.add_edge(
         START,
@@ -52,11 +54,16 @@ def build_research_graph():
 
     graph.add_edge(
         "paper_reader",
+        "evidence_processor"
+    )
+
+    graph.add_edge(
+        "evidence_processor",
         END
     )
 
-    # --------------------------------------------------------
-    # Compile
-    # --------------------------------------------------------
+    # ========================================================
+    # COMPILE
+    # ========================================================
 
     return graph.compile()

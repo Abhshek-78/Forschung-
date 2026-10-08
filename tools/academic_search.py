@@ -3,20 +3,21 @@ from semanticscholar import SemanticScholar
 
 
 # ============================================================
-# arXiv SEARCH
+# ARXIV SEARCH
 # ============================================================
 
 def search_arxiv_papers(
     query: str,
     max_results: int = 5
 ):
-    """
-    Search arXiv for academic papers.
 
-    Returns structured paper metadata.
-    """
+    print("\n[1/2] Searching arXiv...")
 
-    client = arxiv.Client()
+    client = arxiv.Client(
+        page_size=max_results,
+        delay_seconds=1,
+        num_retries=2
+    )
 
     search = arxiv.Search(
         query=query,
@@ -26,24 +27,39 @@ def search_arxiv_papers(
 
     papers = []
 
-    for paper in client.results(search):
+    try:
 
-        papers.append({
-            "title": paper.title,
-            "authors": [
-                str(author)
-                for author in paper.authors
-            ],
-            "year": (
-                paper.published.year
-                if paper.published
-                else None
-            ),
-            "abstract": paper.summary,
-            "source": "arxiv",
-            "paper_url": paper.entry_id,
-            "pdf_url": paper.pdf_url
-        })
+        for paper in client.results(search):
+
+            papers.append({
+                "title": paper.title,
+                "authors": [
+                    str(author)
+                    for author in paper.authors
+                ],
+                "year": (
+                    paper.published.year
+                    if paper.published
+                    else None
+                ),
+                "abstract": paper.summary,
+                "source": "arxiv",
+                "paper_url": paper.entry_id,
+                "pdf_url": paper.pdf_url
+            })
+
+    except Exception as e:
+
+        print(
+            f"arXiv error: {e}"
+        )
+
+        raise
+
+    print(
+        f"✓ arXiv completed: "
+        f"{len(papers)} papers"
+    )
 
     return papers
 
@@ -56,41 +72,56 @@ def search_semantic_scholar_papers(
     query: str,
     max_results: int = 5
 ):
-    """
-    Search Semantic Scholar for academic papers.
 
-    Returns structured paper metadata.
-    """
+    print("\n[2/2] Searching Semantic Scholar...")
 
-    scholar = SemanticScholar()
+    try:
 
-    results = scholar.search_paper(
-        query,
-        limit=max_results
-    )
+        scholar = SemanticScholar(
+            timeout=10
+        )
 
-    papers = []
+        results = scholar.search_paper(
+            query,
+            limit=max_results
+        )
 
-    for paper in results:
+        papers = []
 
-        authors = []
+        for paper in results:
 
-        if paper.authors:
+            authors = []
 
-            authors = [
-                author.name
-                for author in paper.authors
-                if author.name
-            ]
+            if paper.authors:
 
-        papers.append({
-            "title": paper.title,
-            "authors": authors,
-            "year": paper.year,
-            "abstract": paper.abstract or "",
-            "source": "semantic_scholar",
-            "paper_url": paper.url,
-            "pdf_url": None
-        })
+                authors = [
+                    author.name
+                    for author in paper.authors
+                    if author.name
+                ]
 
-    return papers
+            papers.append({
+                "title": paper.title,
+                "authors": authors,
+                "year": paper.year,
+                "abstract": paper.abstract or "",
+                "source": "semantic_scholar",
+                "paper_url": paper.url,
+                "pdf_url": None
+            })
+
+        print(
+            f"✓ Semantic Scholar completed: "
+            f"{len(papers)} papers"
+        )
+
+        return papers
+
+    except Exception as e:
+
+        print(
+            f"⚠ Semantic Scholar failed: {e}"
+        )
+
+        # Don't crash the whole research pipeline.
+        return []
