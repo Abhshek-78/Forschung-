@@ -1,4 +1,26 @@
+from pathlib import Path
+
 from graph.workflow import build_research_graph
+
+
+def save_report(report: str, topic: str):
+
+    output_dir = Path("outputs")
+    output_dir.mkdir(exist_ok=True)
+
+    safe_topic = "".join(
+        character if character.isalnum() else "_"
+        for character in topic
+    )
+
+    filename = output_dir / f"{safe_topic[:80]}_research_report.md"
+
+    filename.write_text(
+        report,
+        encoding="utf-8"
+    )
+
+    return filename
 
 
 def main():
@@ -14,21 +36,13 @@ def main():
 
     if not topic:
 
-        print(
-            "\nResearch topic cannot be empty."
-        )
+        print("\nResearch topic cannot be empty.")
 
         return
 
-    # --------------------------------------------------------
-    # Build graph
-    # --------------------------------------------------------
-
-    graph = build_research_graph()
-
-    # --------------------------------------------------------
-    # Initial state
-    # --------------------------------------------------------
+    # -----------------------------------------------------
+    # Initial State
+    # -----------------------------------------------------
 
     initial_state = {
 
@@ -40,20 +54,32 @@ def main():
 
         "evidence_chunks": [],
 
+        "research_draft": "",
+
+        "critic_feedback": "",
+
+        "final_report": "",
+
         "errors": []
     }
 
-    # --------------------------------------------------------
-    # Run LangGraph
-    # --------------------------------------------------------
+    # -----------------------------------------------------
+    # Build Graph
+    # -----------------------------------------------------
+
+    graph = build_research_graph()
+
+    # -----------------------------------------------------
+    # Execute Research Pipeline
+    # -----------------------------------------------------
 
     final_state = graph.invoke(
         initial_state
     )
 
-    # --------------------------------------------------------
-    # Final result
-    # --------------------------------------------------------
+    # -----------------------------------------------------
+    # Pipeline Summary
+    # -----------------------------------------------------
 
     print("\n")
     print("=" * 70)
@@ -62,93 +88,94 @@ def main():
 
     print(
         "\nTopic:",
-        final_state.get(
-            "topic",
-            topic
-        )
+        final_state.get("topic", topic)
     )
 
     print(
-        "\nPapers found:",
-        len(
-            final_state.get(
-                "papers",
-                []
-            )
-        )
+        "Papers found:",
+        len(final_state.get("papers", []))
     )
 
     print(
         "Papers successfully read:",
-        len(
-            final_state.get(
-                "corpus",
-                []
-            )
-        )
+        len(final_state.get("corpus", []))
     )
 
     print(
         "Evidence chunks:",
-        len(
-            final_state.get(
-                "evidence_chunks",
-                []
-            )
-        )
+        len(final_state.get("evidence_chunks", []))
     )
 
     print(
+        "Draft generated:",
+        bool(final_state.get("research_draft"))
+    )
+
+    print(
+        "Critic review generated:",
+        bool(final_state.get("critic_feedback"))
+    )
+
+    print(
+        "Final report generated:",
+        bool(final_state.get("final_report"))
+    )
+
+    errors = final_state.get("errors", [])
+
+    print(
         "Errors:",
-        len(
-            final_state.get(
-                "errors",
-                []
-            )
+        len(errors)
+    )
+
+    # -----------------------------------------------------
+    # Save Final Report
+    # -----------------------------------------------------
+
+    final_report = final_state.get(
+        "final_report",
+        ""
+    )
+
+    if final_report:
+
+        report_path = save_report(
+            final_report,
+            topic
         )
-    )
 
-    # --------------------------------------------------------
-    # Paper summary
-    # --------------------------------------------------------
+        print("\n✓ Final research paper saved to:")
 
-    papers = final_state.get(
-        "papers",
-        []
-    )
-
-    if papers:
+        print(
+            f"  {report_path}"
+        )
 
         print("\n")
         print("=" * 70)
-        print("PAPER SUMMARY")
+        print("FINAL RESEARCH PAPER")
         print("=" * 70)
 
-        for index, paper in enumerate(
-            papers,
-            start=1
-        ):
+        print("\n")
+        print(final_report)
+
+    # -----------------------------------------------------
+    # Display Errors
+    # -----------------------------------------------------
+
+    if errors:
+
+        print("\n")
+        print("=" * 70)
+        print("PIPELINE ERRORS")
+        print("=" * 70)
+
+        for error in errors:
 
             print(
-                f"\n{index}. "
-                f"{paper.get('title')}"
-            )
-
-            print(
-                f"   Source: "
-                f"{paper.get('source')}"
-            )
-
-            print(
-                f"   Year: "
-                f"{paper.get('year')}"
-            )
-
-            print(
-                f"   URL: "
-                f"{paper.get('paper_url')}"
+                f"\n⚠ {error}"
             )
 
 
 if __name__ == "__main__":
+
     main()

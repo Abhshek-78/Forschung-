@@ -1,27 +1,24 @@
-from langgraph.graph import (
-    StateGraph,
-    START,
-    END
-)
+from langgraph.graph import StateGraph, START, END
 
 from graph.state import ResearchState
 
 from graph.nodes import (
     academic_search_node,
     paper_reader_node,
-    evidence_processor_node
+    evidence_processor_node,
+    writer_node,
+    critic_node,
+    revision_node
 )
 
 
 def build_research_graph():
 
-    graph = StateGraph(
-        ResearchState
-    )
+    graph = StateGraph(ResearchState)
 
-    # ========================================================
-    # NODES
-    # ========================================================
+    # -----------------------------------------------------
+    # Nodes
+    # -----------------------------------------------------
 
     graph.add_node(
         "academic_search",
@@ -38,9 +35,24 @@ def build_research_graph():
         evidence_processor_node
     )
 
-    # ========================================================
-    # EDGES
-    # ========================================================
+    graph.add_node(
+        "writer",
+        writer_node
+    )
+
+    graph.add_node(
+        "critic",
+        critic_node
+    )
+
+    graph.add_node(
+        "revision",
+        revision_node
+    )
+
+    # -----------------------------------------------------
+    # Workflow
+    # -----------------------------------------------------
 
     graph.add_edge(
         START,
@@ -59,11 +71,22 @@ def build_research_graph():
 
     graph.add_edge(
         "evidence_processor",
-        END
+        "writer"
     )
 
-    # ========================================================
-    # COMPILE
-    # ========================================================
+    graph.add_edge(
+        "writer",
+        "critic"
+    )
+
+    graph.add_edge(
+        "critic",
+        "revision"
+    )
+
+    graph.add_edge(
+        "revision",
+        END
+    )
 
     return graph.compile()

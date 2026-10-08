@@ -2,36 +2,26 @@ from typing import TypedDict, List, Dict, Any
 
 
 class ResearchState(TypedDict, total=False):
-    """
-    Shared state passed between all LangGraph nodes.
-    """
-
-    # --------------------------------------------------------
-    # USER INPUT
-    # --------------------------------------------------------
-
+    # Research topic entered by the user
     topic: str
 
-    # --------------------------------------------------------
-    # ACADEMIC SEARCH RESULTS
-    # --------------------------------------------------------
-
+    # Papers discovered by academic search
     papers: List[Dict[str, Any]]
 
-    # --------------------------------------------------------
-    # FULL PDF CORPUS
-    # --------------------------------------------------------
-
+    # Extracted PDF corpus
     corpus: List[Dict[str, Any]]
 
-    # --------------------------------------------------------
-    # PAGE-AWARE EVIDENCE CHUNKS
-    # --------------------------------------------------------
-
+    # Page-aware evidence chunks
     evidence_chunks: List[Dict[str, Any]]
 
-    # --------------------------------------------------------
-    # ERRORS
-    # --------------------------------------------------------
+    # First research draft
+    research_draft: str
 
+    # Critic's evaluation
+    critic_feedback: str
+
+    # Final revised research paper
+    final_report: str
+
+    # Pipeline errors
     errors: List[str]

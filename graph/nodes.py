@@ -1,6 +1,13 @@
 from tools.academic_search import (
     search_arxiv_papers,
-    search_semantic_scholar_papers
+    search_semantic_scholar_papers,
+    search_crossref_papers,
+    search_openalex_papers,
+)
+from llm.research_chains import (
+    writer_chain,
+    critic_chain,
+    revision_chain
 )
 
 from tools.pdf_reader import read_pdf
@@ -227,6 +234,75 @@ def paper_reader_node(
         "corpus": corpus,
         "errors": errors
     }
+
+def collect_academic_papers(topic, max_results=3):
+
+    papers = []
+
+    search_functions = [
+        ("arXiv", search_arxiv_papers),
+        ("Semantic Scholar", search_semantic_scholar_papers),
+        ("Crossref", search_crossref_papers),
+        ("OpenAlex", search_openalex_papers),
+    ]
+
+    for source_name, search_function in search_functions:
+
+        try:
+
+            print(f"\nSearching {source_name}...")
+
+            results = search_function(
+                topic,
+                max_results=max_results,
+            )
+
+            if results:
+                papers.extend(results)
+
+                print(
+                    f"{source_name} returned "
+                    f"{len(results)} papers."
+                )
+
+            else:
+                print(
+                    f"{source_name} returned no papers."
+                )
+
+        except Exception as exc:
+
+            print(
+                f"{source_name} failed: {exc}"
+            )
+
+    # Deduplicate papers by normalized title.
+    unique_papers = []
+    seen_titles = set()
+
+    for paper in papers:
+
+        title = paper.get("title", "").strip()
+
+        if not title:
+            continue
+
+        normalized_title = " ".join(
+            title.lower().split()
+        )
+
+        if normalized_title in seen_titles:
+            continue
+
+        seen_titles.add(normalized_title)
+        unique_papers.append(paper)
+
+    print(
+        f"\nTotal unique academic papers: "
+        f"{len(unique_papers)}"
+    )
+
+    return unique_papers
 # ============================================================
 # EVIDENCE PROCESSOR NODE
 # ============================================================
@@ -312,3 +388,236 @@ def evidence_processor_node(
         **state,
         "evidence_chunks": evidence_chunks
     }
+def format_evidence(evidence_chunks, max_chars=6000):
+    """
+    Prepare a compact, source-aware evidence collection.
+
+    Limits the prompt size while preserving source metadata.
+    The input is already extracted academic evidence.
+    """
+
+    formatted = []
+    used_chars = 0
+
+    # Keep the evidence in its existing order.
+    for chunk in evidence_chunks:
+
+        text = chunk.get("text", "").strip()
+
+        if not text:
+            continue
+
+        block = (
+            f"\n--- ACADEMIC SOURCE ---\n"
+            f"Title: {chunk.get('title', 'Unknown')}\n"
+            f"Source: {chunk.get('source', 'Unknown')}\n"
+            f"Paper URL: {chunk.get('paper_url', '')}\n"
+            f"PDF URL: {chunk.get('pdf_url', '')}\n"
+            f"Page: {chunk.get('page_number', 'Unknown')}\n"
+            f"Chunk ID: {chunk.get('chunk_id', 'Unknown')}\n"
+            f"Evidence: {text}\n"
+        )
+
+        remaining = max_chars - used_chars
+
+        if remaining <= 0:
+            break
+
+        # Avoid exceeding the evidence character budget.
+        if len(block) > remaining:
+            if remaining > 300:
+                block = block[:remaining]
+                formatted.append(block)
+
+            break
+
+        formatted.append(block)
+        used_chars += len(block)
+
+    result = "\n".join(formatted)
+
+    print(f"Evidence selected: {len(formatted)} chunks")
+    print(f"Evidence size: {len(result)} characters")
+
+    return result
+
+def writer_node(state: ResearchState) -> ResearchState:
+
+    print("\n")
+    print("=" * 70)
+    print("WRITER AGENT")
+    print("=" * 70)
+
+    topic = state.get("topic", "")
+    evidence_chunks = state.get("evidence_chunks", [])
+
+    if not evidence_chunks:
+        print("\n⚠ No evidence available for writing.")
+
+        return {
+            **state,
+            "research_draft": "",
+            "errors": state.get("errors", []) + [
+                "Writer received no evidence chunks."
+            ]
+        }
+
+    print(f"\nResearch topic: {topic}")
+    print(f"Evidence chunks available: {len(evidence_chunks)}")
+
+    print("\nGenerating research draft with GroqCloud...")
+
+    evidence = format_evidence(evidence_chunks)
+
+    try:
+
+        draft = writer_chain.invoke(
+            {
+                "topic": topic,
+                "evidence": evidence
+            }
+        )
+
+        print("\n✓ Research draft generated.")
+        print(f"✓ Draft length: {len(draft)} characters")
+
+        return {
+            **state,
+            "research_draft": draft
+        }
+
+    except Exception as exc:
+
+        print(f"\n⚠ Writer failed: {exc}")
+
+        return {
+            **state,
+            "research_draft": "",
+            "errors": state.get("errors", []) + [
+                f"Writer error: {str(exc)}"
+            ]
+        }
+def critic_node(state: ResearchState) -> ResearchState:
+
+    print("\n")
+    print("=" * 70)
+    print("CRITIC AGENT")
+    print("=" * 70)
+
+    topic = state.get("topic", "")
+    draft = state.get("research_draft", "")
+    evidence_chunks = state.get("evidence_chunks", [])
+
+    if not draft:
+        print("\n⚠ No research draft available.")
+
+        return {
+            **state,
+            "critic_feedback": "",
+            "errors": state.get("errors", []) + [
+                "Critic received no research draft."
+            ]
+        }
+
+    print("\nReviewing research draft...")
+    print(f"Evidence chunks available: {len(evidence_chunks)}")
+
+    evidence = format_evidence(evidence_chunks)
+
+    try:
+
+        feedback = critic_chain.invoke(
+            {
+                "topic": topic,
+                "evidence": evidence,
+                "draft": draft
+            }
+        )
+
+        print("\n✓ Academic review completed.")
+        print(f"✓ Review length: {len(feedback)} characters")
+
+        return {
+            **state,
+            "critic_feedback": feedback
+        }
+
+    except Exception as exc:
+
+        print(f"\n⚠ Critic failed: {exc}")
+
+        return {
+            **state,
+            "critic_feedback": "",
+            "errors": state.get("errors", []) + [
+                f"Critic error: {str(exc)}"
+            ]
+        }
+def revision_node(state: ResearchState) -> ResearchState:
+
+    print("\n")
+    print("=" * 70)
+    print("REVISION AGENT")
+    print("=" * 70)
+
+    topic = state.get("topic", "")
+    draft = state.get("research_draft", "")
+    critique = state.get("critic_feedback", "")
+    evidence_chunks = state.get("evidence_chunks", [])
+
+    if not draft:
+        print("\n⚠ No draft available for revision.")
+
+        return {
+            **state,
+            "final_report": "",
+            "errors": state.get("errors", []) + [
+                "Revision received no research draft."
+            ]
+        }
+
+    if not critique:
+        print("\n⚠ No critic feedback available.")
+
+        return {
+            **state,
+            "final_report": draft
+        }
+
+    print("\nRevising research paper using critic feedback...")
+
+    evidence = format_evidence(evidence_chunks)
+
+    try:
+
+        final_report = revision_chain.invoke(
+            {
+                "topic": topic,
+                "evidence": evidence,
+                "draft": draft,
+                "critique": critique
+            }
+        )
+
+        print("\n✓ Final research paper generated.")
+        print(
+            f"✓ Final report length: "
+            f"{len(final_report)} characters"
+        )
+
+        return {
+            **state,
+            "final_report": final_report
+        }
+
+    except Exception as exc:
+
+        print(f"\n⚠ Revision failed: {exc}")
+
+        return {
+            **state,
+            "final_report": draft,
+            "errors": state.get("errors", []) + [
+                f"Revision error: {str(exc)}"
+            ]
+        }
