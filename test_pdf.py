@@ -22,13 +22,8 @@ def main():
     print("=" * 70)
 
     print(
-        "\nPDF Path:",
-        result["pdf_path"]
-    )
-
-    print(
         "\nExtracted characters:",
-        len(result["text"])
+        len(result)
     )
 
     print("\n")
@@ -37,7 +32,7 @@ def main():
     print("=" * 70)
 
     print(
-        result["text"][:5000]
+        result[:5000]
     )
 
 

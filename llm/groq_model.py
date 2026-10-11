@@ -1,26 +1,54 @@
 import os
 
 from dotenv import load_dotenv
+
 from langchain_groq import ChatGroq
+
+
+# ============================================================
+# LOAD ENVIRONMENT
+# ============================================================
 
 load_dotenv()
 
-GROQ_MODEL = "openai/gpt-oss-120b"
 
+# ============================================================
+# GROQ MODEL
+# ============================================================
+
+GROQ_MODEL = (
+    "openai/gpt-oss-120b"
+)
+
+
+# ============================================================
+# CREATE LLM
+# ============================================================
 
 def get_llm():
 
-    api_key = os.getenv("GROQ_API_KEY")
+    api_key = os.getenv(
+        "GROQ_API_KEY"
+    )
 
     if not api_key:
+
         raise ValueError(
-            "GROQ_API_KEY is missing from the .env file."
+            "GROQ_API_KEY is missing "
+            "from the .env file."
         )
 
     return ChatGroq(
+
         model=GROQ_MODEL,
+
         temperature=0,
+
         max_tokens=1200,
+
         max_retries=2,
+
         timeout=60,
+
+        api_key=api_key
     )

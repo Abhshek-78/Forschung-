@@ -1,4 +1,8 @@
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import (
+    StateGraph,
+    START,
+    END
+)
 
 from graph.state import ResearchState
 
@@ -12,13 +16,19 @@ from graph.nodes import (
 )
 
 
+# ============================================================
+# BUILD RESEARCH GRAPH
+# ============================================================
+
 def build_research_graph():
 
-    graph = StateGraph(ResearchState)
+    graph = StateGraph(
+        ResearchState
+    )
 
-    # -----------------------------------------------------
+    # --------------------------------------------------------
     # Nodes
-    # -----------------------------------------------------
+    # --------------------------------------------------------
 
     graph.add_node(
         "academic_search",
@@ -50,9 +60,9 @@ def build_research_graph():
         revision_node
     )
 
-    # -----------------------------------------------------
-    # Workflow
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # Edges
+    # --------------------------------------------------------
 
     graph.add_edge(
         START,
@@ -88,5 +98,9 @@ def build_research_graph():
         "revision",
         END
     )
+
+    # --------------------------------------------------------
+    # Compile
+    # --------------------------------------------------------
 
     return graph.compile()

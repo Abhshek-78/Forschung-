@@ -1,19 +1,42 @@
 from pathlib import Path
+import sys
 
-from graph.workflow import build_research_graph
+from graph.workflow import (
+    build_research_graph
+)
 
 
-def save_report(report: str, topic: str):
+# ============================================================
+# SAVE REPORT
+# ============================================================
 
-    output_dir = Path("outputs")
-    output_dir.mkdir(exist_ok=True)
+def save_report(
+    report: str,
+    topic: str
+):
+
+    output_dir = Path(
+        "outputs"
+    )
+
+    output_dir.mkdir(
+        exist_ok=True
+    )
 
     safe_topic = "".join(
-        character if character.isalnum() else "_"
+
+        character
+        if character.isalnum()
+        else "_"
+
         for character in topic
     )
 
-    filename = output_dir / f"{safe_topic[:80]}_research_report.md"
+    filename = (
+        output_dir
+        / f"{safe_topic[:80]}"
+        "_research_report.md"
+    )
 
     filename.write_text(
         report,
@@ -23,12 +46,39 @@ def save_report(report: str, topic: str):
     return filename
 
 
+# ============================================================
+# MAIN
+# ============================================================
+
 def main():
 
+    # Windows terminals may default to cp1252, which cannot print the
+    # status symbols used throughout the pipeline.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(
+            encoding="utf-8",
+            errors="replace"
+        )
+
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(
+            encoding="utf-8",
+            errors="replace"
+        )
+
     print("\n")
-    print("=" * 70)
-    print("MULTI-AGENT AI RESEARCH SYSTEM")
-    print("=" * 70)
+
+    print(
+        "=" * 70
+    )
+
+    print(
+        "MULTI-AGENT AI RESEARCH SYSTEM"
+    )
+
+    print(
+        "=" * 70
+    )
 
     topic = input(
         "\nEnter a research topic: "
@@ -36,13 +86,16 @@ def main():
 
     if not topic:
 
-        print("\nResearch topic cannot be empty.")
+        print(
+            "\nResearch topic "
+            "cannot be empty."
+        )
 
         return
 
-    # -----------------------------------------------------
-    # Initial State
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # INITIAL STATE
+    # --------------------------------------------------------
 
     initial_state = {
 
@@ -63,111 +116,204 @@ def main():
         "errors": []
     }
 
-    # -----------------------------------------------------
-    # Build Graph
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # BUILD GRAPH
+    # --------------------------------------------------------
 
-    graph = build_research_graph()
+    try:
 
-    # -----------------------------------------------------
-    # Execute Research Pipeline
-    # -----------------------------------------------------
+        graph = (
+            build_research_graph()
+        )
 
-    final_state = graph.invoke(
-        initial_state
-    )
+    except Exception as exc:
 
-    # -----------------------------------------------------
-    # Pipeline Summary
-    # -----------------------------------------------------
+        print(
+            "\n Could not build "
+            f"research graph: {exc}"
+        )
+
+        return
+
+    # --------------------------------------------------------
+    # RUN PIPELINE
+    # --------------------------------------------------------
+
+    try:
+
+        final_state = graph.invoke(
+            initial_state
+        )
+
+    except Exception as exc:
+
+        print("\n")
+        print(
+            "=" * 70
+        )
+
+        print(
+            " RESEARCH PIPELINE FAILED"
+        )
+
+        print(
+            "=" * 70
+        )
+
+        print(
+            f"\nError: {exc}"
+        )
+
+        return
+
+    # --------------------------------------------------------
+    # SUMMARY
+    # --------------------------------------------------------
 
     print("\n")
-    print("=" * 70)
-    print("RESEARCH PIPELINE COMPLETE")
-    print("=" * 70)
+
+    print(
+        "=" * 70
+    )
+
+    print(
+        "RESEARCH PIPELINE COMPLETE"
+    )
+
+    print(
+        "=" * 70
+    )
 
     print(
         "\nTopic:",
-        final_state.get("topic", topic)
+        final_state.get(
+            "topic",
+            topic
+        )
     )
 
     print(
         "Papers found:",
-        len(final_state.get("papers", []))
+        len(
+            final_state.get(
+                "papers",
+                []
+            )
+        )
     )
 
     print(
         "Papers successfully read:",
-        len(final_state.get("corpus", []))
+        len(
+            final_state.get(
+                "corpus",
+                []
+            )
+        )
     )
 
     print(
         "Evidence chunks:",
-        len(final_state.get("evidence_chunks", []))
+        len(
+            final_state.get(
+                "evidence_chunks",
+                []
+            )
+        )
     )
 
     print(
         "Draft generated:",
-        bool(final_state.get("research_draft"))
+        bool(
+            final_state.get(
+                "research_draft"
+            )
+        )
     )
 
     print(
         "Critic review generated:",
-        bool(final_state.get("critic_feedback"))
+        bool(
+            final_state.get(
+                "critic_feedback"
+            )
+        )
     )
 
     print(
         "Final report generated:",
-        bool(final_state.get("final_report"))
+        bool(
+            final_state.get(
+                "final_report"
+            )
+        )
     )
 
-    errors = final_state.get("errors", [])
+    errors = final_state.get(
+        "errors",
+        []
+    )
 
     print(
         "Errors:",
         len(errors)
     )
 
-    # -----------------------------------------------------
-    # Save Final Report
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # SAVE REPORT
+    # --------------------------------------------------------
 
-    final_report = final_state.get(
-        "final_report",
-        ""
+    final_report = (
+        final_state.get(
+            "final_report",
+            ""
+        )
     )
 
     if final_report:
 
-        report_path = save_report(
-            final_report,
-            topic
-        )
+        try:
 
-        print("\n✓ Final research paper saved to:")
+            report_path = save_report(
+                final_report,
+                topic
+            )
 
-        print(
-            f"  {report_path}"
-        )
+            print(
+                "\n✓ Final research paper "
+                "saved to:"
+            )
 
-        print("\n")
-        print("=" * 70)
-        print("FINAL RESEARCH PAPER")
-        print("=" * 70)
+            print(
+                f"  {report_path}"
+            )
 
-        print("\n")
-        print(final_report)
+        except Exception as exc:
 
-    # -----------------------------------------------------
-    # Display Errors
-    # -----------------------------------------------------
+            print(
+                "\n⚠ Could not save report:"
+                f" {exc}"
+            )
+
+    # --------------------------------------------------------
+    # DISPLAY ERRORS
+    # --------------------------------------------------------
 
     if errors:
 
         print("\n")
-        print("=" * 70)
-        print("PIPELINE ERRORS")
-        print("=" * 70)
+
+        print(
+            "=" * 70
+        )
+
+        print(
+            "PIPELINE ERRORS"
+        )
+
+        print(
+            "=" * 70
+        )
 
         for error in errors:
 
@@ -175,6 +321,36 @@ def main():
                 f"\n⚠ {error}"
             )
 
+    # --------------------------------------------------------
+    # DISPLAY FINAL REPORT
+    # --------------------------------------------------------
+
+    if final_report:
+
+        print("\n")
+
+        print(
+            "=" * 70
+        )
+
+        print(
+            "FINAL RESEARCH PAPER"
+        )
+
+        print(
+            "=" * 70
+        )
+
+        print("\n")
+
+        print(
+            final_report
+        )
+
+
+# ============================================================
+# ENTRY POINT
+# ============================================================
 
 if __name__ == "__main__":
 

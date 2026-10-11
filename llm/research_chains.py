@@ -1,76 +1,93 @@
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import (
+    ChatPromptTemplate
+)
 
-from llm.groq_model import get_llm
+from langchain_core.output_parsers import (
+    StrOutputParser
+)
+
+from llm.groq_model import (
+    get_llm
+)
 
 
-# ---------------------------------------------------------
+# ============================================================
 # LLM
-# ---------------------------------------------------------
+# ============================================================
 
 llm = get_llm()
 
 
-# ---------------------------------------------------------
+# ============================================================
 # WRITER PROMPT
-# ---------------------------------------------------------
+# ============================================================
 
-writer_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            """
-You are an expert academic research writer.
+writer_prompt = ChatPromptTemplate.from_messages([
 
-Your job is to write a rigorous research paper using ONLY
-the academic evidence supplied by the research system.
+    (
+        "system",
+        """
+You are an academic research writer.
 
-Important rules:
+Write a clear and academically structured
+research paper based ONLY on the supplied
+research evidence.
 
-1. Do not invent research findings.
-2. Do not invent papers or sources.
-3. Do not make unsupported claims.
-4. Prefer information directly supported by the evidence.
-5. When making a claim, preserve the relationship between
-   the claim and its source paper.
-6. Use professional academic language.
-7. Clearly distinguish established findings from observations.
-8. Do not mention that you are an AI.
-9. Do not discuss the internal pipeline.
-10. Use the supplied paper metadata and URLs when creating
-    the references.
+IMPORTANT RULES:
 
-Structure the paper as:
+1. Never invent papers.
 
-# Title
+2. Never invent authors.
 
-## Abstract
+3. Never invent experimental results.
 
-## 1. Introduction
+4. Never invent statistics.
 
-## 2. Background
+5. Never invent citations.
 
-## 3. Key Findings
+6. Do not present unsupported claims as
+   research findings.
 
-## 4. Technical Analysis
+7. Clearly distinguish evidence-supported
+   findings from general technical explanation.
 
-## 5. Comparison and Discussion
+8. Use only the supplied evidence.
 
-## 6. Challenges and Limitations
+9. If the evidence is insufficient for a claim,
+   say that the evidence is insufficient.
 
-## 7. Future Directions
+10. Keep the paper concise but technically useful.
 
-## 8. Conclusion
+Use this structure:
 
-## References
+Title
 
-The final paper should be detailed, coherent and academically
-written.
-""",
-        ),
-        (
-            "human",
-            """
+Abstract
+
+Introduction
+
+Background
+
+Key Findings
+
+Technical Analysis
+
+Challenges and Limitations
+
+Future Directions
+
+Conclusion
+
+References
+
+For references, use only the actual source
+information supplied in the evidence.
+"""
+    ),
+
+    (
+        "human",
+        """
 Research Topic:
 
 {topic}
@@ -82,97 +99,79 @@ Academic Evidence:
 
 
 Write the research paper now.
-""",
-        ),
-    ]
+"""
+    )
+])
+
+
+writer_chain = (
+    writer_prompt
+    | llm
+    | StrOutputParser()
 )
 
 
-writer_chain = writer_prompt | llm | StrOutputParser()
-
-
-# ---------------------------------------------------------
+# ============================================================
 # CRITIC PROMPT
-# ---------------------------------------------------------
+# ============================================================
 
-critic_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            """
-You are a strict academic research reviewer.
+critic_prompt = ChatPromptTemplate.from_messages([
 
-Review the research draft against the supplied academic
-evidence.
+    (
+        "system",
+        """
+You are an academic research critic.
 
-Your job is NOT to rewrite the paper.
+Review the research draft against the
+supplied evidence.
 
-Identify:
+Check:
 
-1. Unsupported claims
-2. Claims that appear stronger than the evidence
-3. Missing important findings
-4. Incorrect or weak source attribution
-5. Logical inconsistencies
-6. Repetition
-7. Structural problems
-8. Technical inaccuracies
-9. Missing limitations
-10. Problems in the references
+1. Unsupported claims.
 
-Be specific.
+2. Incorrect claims.
 
-For every important criticism, explain what should be
-changed.
+3. Missing important findings.
 
-Give an overall score from 1 to 10.
+4. Weak reasoning.
 
-Use this structure:
+5. Citation problems.
 
-# Academic Review
+6. Whether conclusions are supported.
 
-## Overall Score
+7. Whether technical explanations are clear.
+
+8. Whether the references correspond to
+   actual supplied sources.
+
+Give concise actionable feedback.
+
+Do NOT rewrite the complete paper.
+
+Use this format:
+
+Overall Assessment
+
+Major Problems
+
+Minor Problems
+
+Evidence Problems
+
+Citation Problems
+
+Required Revisions
 
 Score: X/10
+"""
+    ),
 
-## Strengths
-
-- ...
-
-## Critical Problems
-
-- ...
-
-## Evidence Problems
-
-- ...
-
-## Missing Information
-
-- ...
-
-## Structural Problems
-
-- ...
-
-## Recommended Changes
-
-- ...
-
-## Final Verdict
-""",
-        ),
-        (
-            "human",
-            """
+    (
+        "human",
+        """
 Research Topic:
 
 {topic}
-
-
-Academic Evidence:
-
-{evidence}
 
 
 Research Draft:
@@ -180,58 +179,98 @@ Research Draft:
 {draft}
 
 
-Review this research draft carefully.
-""",
-        ),
-    ]
+Academic Evidence:
+
+{evidence}
+
+
+Review the draft.
+"""
+    )
+])
+
+
+critic_chain = (
+    critic_prompt
+    | llm
+    | StrOutputParser()
 )
 
 
-critic_chain = critic_prompt | llm | StrOutputParser()
-
-
-# ---------------------------------------------------------
+# ============================================================
 # REVISION PROMPT
-# ---------------------------------------------------------
+# ============================================================
 
-revision_prompt = ChatPromptTemplate.from_messages(
-    [
-        (
-            "system",
-            """
-You are a senior academic researcher revising a research
-paper after peer review.
+revision_prompt = ChatPromptTemplate.from_messages([
 
-Rewrite the research paper using:
+    (
+        "system",
+        """
+You are the final academic editor.
 
-1. The original research draft
-2. The critic's feedback
-3. The original academic evidence
+Revise the research paper using:
 
-Rules:
+1. The original draft.
 
-- Correct unsupported claims.
+2. The critic feedback.
+
+3. The supplied academic evidence.
+
+IMPORTANT:
+
 - Do not invent information.
-- Do not add facts that are absent from the evidence.
-- Preserve accurate findings from the original draft.
-- Improve academic structure.
-- Improve clarity and logical flow.
-- Remove unnecessary repetition.
-- Strengthen source attribution.
-- Keep references connected to the supplied papers.
-- Include limitations.
-- Make the final paper professional and publication-style.
+- Do not invent references.
+- Do not invent statistics.
+- Do not invent authors.
+- Do not add unsupported findings.
+- Remove unsupported claims.
+- Correct citation problems.
+- Preserve useful technical content.
+- Improve academic clarity.
+- Keep the final paper concise.
 
-Return ONLY the revised research paper.
-Do not discuss the revision process.
-""",
-        ),
-        (
-            "human",
-            """
+Return ONLY the final research paper.
+
+Use:
+
+Title
+
+Abstract
+
+Introduction
+
+Background
+
+Key Findings
+
+Technical Analysis
+
+Challenges and Limitations
+
+Future Directions
+
+Conclusion
+
+References
+"""
+    ),
+
+    (
+        "human",
+        """
 Research Topic:
 
 {topic}
+
+
+Original Draft:
+
+{draft}
+
+
+Critic Feedback:
+
+{feedback}
 
 
 Academic Evidence:
@@ -239,21 +278,14 @@ Academic Evidence:
 {evidence}
 
 
-Original Research Draft:
-
-{draft}
-
-
-Critic Feedback:
-
-{critique}
+Produce the revised final paper.
+"""
+    )
+])
 
 
-Produce the final revised research paper.
-""",
-        ),
-    ]
+revision_chain = (
+    revision_prompt
+    | llm
+    | StrOutputParser()
 )
-
-
-revision_chain = revision_prompt | llm | StrOutputParser()

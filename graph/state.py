@@ -1,27 +1,58 @@
-from typing import TypedDict, List, Dict, Any
+from typing import (
+    TypedDict,
+    List,
+    Dict,
+    Any
+)
 
 
-class ResearchState(TypedDict, total=False):
-    # Research topic entered by the user
+class ResearchState(
+    TypedDict,
+    total=False
+):
+
+    # --------------------------------------------------------
+    # Research input
+    # --------------------------------------------------------
+
     topic: str
 
-    # Papers discovered by academic search
-    papers: List[Dict[str, Any]]
+    # --------------------------------------------------------
+    # Academic papers
+    # --------------------------------------------------------
 
-    # Extracted PDF corpus
-    corpus: List[Dict[str, Any]]
+    papers: List[
+        Dict[str, Any]
+    ]
 
-    # Page-aware evidence chunks
-    evidence_chunks: List[Dict[str, Any]]
+    # --------------------------------------------------------
+    # Extracted paper corpus
+    # --------------------------------------------------------
 
-    # First research draft
+    corpus: List[
+        Dict[str, Any]
+    ]
+
+    # --------------------------------------------------------
+    # Evidence chunks
+    # --------------------------------------------------------
+
+    evidence_chunks: List[
+        Dict[str, Any]
+    ]
+
+    # --------------------------------------------------------
+    # LLM outputs
+    # --------------------------------------------------------
+
     research_draft: str
 
-    # Critic's evaluation
     critic_feedback: str
 
-    # Final revised research paper
     final_report: str
 
+    # --------------------------------------------------------
     # Pipeline errors
+    # --------------------------------------------------------
+
     errors: List[str]

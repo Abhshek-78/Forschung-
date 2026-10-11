@@ -1,140 +1,84 @@
-import os
-import re
 import requests
 import pymupdf
 
 
-PAPERS_DIR = "papers"
+def read_pdf(pdf_url: str, title: str) -> str:
+    """
+    Download a PDF from pdf_url and extract its text.
 
+    Args:
+        pdf_url: Direct URL of the PDF.
+        title: Paper title, used for logging/file naming.
 
-# ============================================================
-# SAFE FILE NAME
-# ============================================================
+    Returns:
+        Extracted PDF text as a string.
+    """
 
-def safe_filename(title: str) -> str:
+    if not pdf_url:
+        raise ValueError("PDF URL is empty.")
 
-    filename = re.sub(
-        r'[<>:"/\\|?*]',
-        "",
-        title
-    )
+    print(f"Downloading PDF: {title}")
 
-    filename = filename.strip()
-
-    if not filename:
-        filename = "unknown_paper"
-
-    return filename[:120]
-
-
-# ============================================================
-# DOWNLOAD PDF
-# ============================================================
-
-def download_pdf(
-    pdf_url: str,
-    title: str
-) -> str:
-
-    os.makedirs(
-        PAPERS_DIR,
-        exist_ok=True
-    )
-
-    filename = safe_filename(title)
-
-    filepath = os.path.join(
-        PAPERS_DIR,
-        f"{filename}.pdf"
-    )
-
-    print(
-        "Downloading PDF..."
-    )
-
-    response = requests.get(
-        pdf_url,
-        timeout=30,
-        headers={
-            "User-Agent":
-            "AcademicResearchAgent/1.0"
-        }
-    )
-
-    response.raise_for_status()
-
-    with open(
-        filepath,
-        "wb"
-    ) as file:
-
-        file.write(
-            response.content
+    try:
+        response = requests.get(
+            pdf_url,
+            timeout=30,
+            headers={
+                "User-Agent": "Mozilla/5.0"
+            }
         )
 
-    return filepath
+        response.raise_for_status()
 
+    except requests.exceptions.Timeout:
+        raise RuntimeError("PDF download timed out.")
 
-# ============================================================
-# EXTRACT PDF TEXT
-# ============================================================
+    except requests.exceptions.RequestException as exc:
+        raise RuntimeError(f"PDF download failed: {exc}")
 
-def extract_pdf_text(
-    filepath: str
-) -> str:
+    pdf_bytes = response.content
 
-    print(
-        "Extracting PDF text..."
-    )
+    if not pdf_bytes:
+        raise RuntimeError("Downloaded PDF is empty.")
 
-    document = pymupdf.open(
-        filepath
-    )
+    try:
+        document = pymupdf.open(
+            stream=pdf_bytes,
+            filetype="pdf"
+        )
+
+    except Exception as exc:
+        raise RuntimeError(
+            f"Could not open downloaded PDF: {exc}"
+        )
 
     pages = []
 
-    for page_number, page in enumerate(
-        document
-    ):
+    try:
+        for page_number, page in enumerate(document, start=1):
 
-        text = page.get_text()
+            text = page.get_text("text")
 
-        pages.append(
-            f"""
-===== PAGE {page_number + 1} =====
+            if text and text.strip():
 
-{text}
-"""
+                pages.append(
+                    f"===== PAGE {page_number} =====\n"
+                    f"{text.strip()}"
+                )
+
+    finally:
+        document.close()
+
+    if not pages:
+        raise RuntimeError(
+            "PDF was opened successfully, but no text could be extracted."
         )
 
-    document.close()
+    extracted_text = "\n\n".join(pages)
 
-    return "\n".join(
-        pages
+    print(
+        f"✓ Extracted {len(pages)} pages "
+        f"({len(extracted_text)} characters)"
     )
 
-
-# ============================================================
-# DOWNLOAD + EXTRACT
-# ============================================================
-
-def read_pdf(
-    pdf_url: str,
-    title: str
-):
-
-    filepath = download_pdf(
-        pdf_url,
-        title
-    )
-
-    text = extract_pdf_text(
-        filepath
-    )
-
-    return {
-        "title": title,
-        "pdf_url": pdf_url,
-        "pdf_path": filepath,
-        "text": text
-    }
+    return extracted_text
