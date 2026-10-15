@@ -8,6 +8,8 @@ import {
   PanelLeftClose,
   Sparkles,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const navigation = [
   {
@@ -28,8 +30,16 @@ const navigation = [
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+
   return (
-    <aside className="flex min-h-screen w-64 shrink-0 flex-col border-r border-white/[0.07] bg-[#0b0e17] p-5">
+    <>
+    <button type="button" onClick={() => setMobileOpen(true)} className="fixed left-4 top-4 z-30 rounded-xl border border-white/10 bg-[#101522] p-2 text-gray-300 md:hidden" aria-label="Open navigation"><PanelLeftClose size={18} className="rotate-180" /></button>
+    {mobileOpen && <button type="button" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-black/70 md:hidden" aria-label="Close navigation" />}
+    <aside className={`fixed inset-y-0 left-0 z-40 flex min-h-screen w-72 shrink-0 flex-col border-r border-white/[0.07] bg-[#0b0e17] p-5 transition-transform md:static md:w-64 md:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
       {/* Logo */}
       <div className="mb-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -60,6 +70,7 @@ export default function Sidebar() {
       {/* New Research */}
       <button
         type="button"
+        onClick={() => navigate("/new")}
         className="mb-8 flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/10 transition hover:bg-indigo-400"
       >
         <Plus size={18} />
@@ -79,6 +90,7 @@ export default function Sidebar() {
             <button
               key={item.label}
               type="button"
+              onClick={() => { if (item.label === "Dashboard") navigate("/"); if (item.label === "Research History") navigate("/history"); setMobileOpen(false); }}
               className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition ${
                 item.active
                   ? "border border-indigo-400/10 bg-indigo-500/10 text-indigo-300"
@@ -112,6 +124,7 @@ export default function Sidebar() {
 
         <button
           type="button"
+          onClick={() => setAuthOpen(true)}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-400 transition hover:bg-white/[0.04] hover:text-white"
         >
           <Settings size={18} />
@@ -137,5 +150,21 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    {authOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4" role="dialog" aria-modal="true">
+        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#101522] p-6 shadow-2xl sm:p-8">
+          <div className="flex items-center justify-between"><h2 className="text-xl font-semibold text-white">{authMode === "signin" ? "Welcome back" : "Create your account"}</h2><button type="button" onClick={() => setAuthOpen(false)} className="text-2xl text-gray-500 hover:text-white" aria-label="Close settings">×</button></div>
+          <p className="mt-2 text-sm text-gray-400">Sign in to keep your research workspace synced.</p>
+          <div className="mt-6 flex rounded-xl bg-white/[0.04] p-1"><button type="button" onClick={() => setAuthMode("signin")} className={`flex-1 rounded-lg py-2 text-sm ${authMode === "signin" ? "bg-indigo-500 text-white" : "text-gray-400"}`}>Sign in</button><button type="button" onClick={() => setAuthMode("signup")} className={`flex-1 rounded-lg py-2 text-sm ${authMode === "signup" ? "bg-indigo-500 text-white" : "text-gray-400"}`}>Sign up</button></div>
+          <form className="mt-6 space-y-4" onSubmit={(event) => { event.preventDefault(); setAuthOpen(false); }}>
+            {authMode === "signup" && <input required placeholder="Full name" className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none focus:border-indigo-400/50" />}
+            <input required type="email" placeholder="Email address" className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none focus:border-indigo-400/50" />
+            <input required type="password" placeholder="Password" className="w-full rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm text-white outline-none focus:border-indigo-400/50" />
+            <button type="submit" className="w-full rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white hover:bg-indigo-400">{authMode === "signin" ? "Sign in" : "Create account"}</button>
+          </form>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

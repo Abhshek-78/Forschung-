@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 
 import type { ResearchProject } from "../../data/research";
+import { useNavigate } from "react-router-dom";
 
 interface ResearchCardProps {
   project: ResearchProject;
@@ -15,6 +16,7 @@ interface ResearchCardProps {
 export default function ResearchCard({
   project,
 }: ResearchCardProps) {
+  const navigate = useNavigate();
   const isCompleted = project.status === "completed";
 
   return (
@@ -56,6 +58,7 @@ export default function ResearchCard({
 
         <button
           type="button"
+          onClick={() => navigate(`/research/${project.id}`)}
           aria-label="Open research project"
           className="self-end rounded-lg p-2 text-gray-500 transition hover:bg-white/[0.05] hover:text-white sm:self-auto"
         >
@@ -117,6 +120,7 @@ export default function ResearchCard({
 
         <button
           type="button"
+          onClick={() => navigate(`/research/${project.id}`)}
           className="rounded-lg bg-indigo-500/10 px-4 py-2.5 text-xs font-semibold text-indigo-300 transition hover:bg-indigo-500/20"
         >
           View Research

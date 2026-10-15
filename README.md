@@ -159,6 +159,44 @@ From the project root:
 & "E:\Forschung-\venv\Scripts\python.exe" "E:\Forschung-\main.py"
 ```
 
+### Run the frontend
+
+The backend also exposes an HTTP API for the React frontend. Start it in one
+PowerShell window:
+
+```powershell
+& "E:\Forschung-\venv\Scripts\python.exe" "E:\Forschung-\main.py" --server
+```
+
+Then start the frontend in another:
+
+```powershell
+cd "E:\Forschung-\frontend"
+npm run backend
+```
+
+Keep that backend process running, then open a second PowerShell window:
+
+```powershell
+cd "E:\Forschung-\frontend"
+npm run dev
+```
+
+`npm run backend` is the recommended Windows startup command from the
+frontend directory. If Vite shows `ECONNREFUSED 127.0.0.1:8000`, the backend
+process is not running; restart it with `npm run backend`.
+
+The API configures its console as UTF-8 before starting worker threads. This
+is required on Windows because provider warnings may contain Unicode symbols;
+without it, a warning during academic search can incorrectly mark a run as
+failed.
+
+Open the Vite URL shown in the terminal. The dashboard loads runs from
+`GET /api/research`, and **New Research** submits topics to
+`POST /api/research`. Runs are persisted in `outputs/research_runs.json` and
+execute the same LangGraph pipeline used by the CLI. No sample research data
+is bundled in the frontend.
+
 When prompted, enter a research topic, for example:
 
 ```text
@@ -270,4 +308,3 @@ Potential next steps:
 - Add structured logging and a run summary with source-level statistics.
 
 ## License
-

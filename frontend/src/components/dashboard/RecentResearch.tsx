@@ -1,9 +1,17 @@
 import { Clock3, ArrowRight } from "lucide-react";
 
-import { researchProjects } from "../../data/research";
+import type { ResearchProject } from "../../data/research";
 import ResearchCard from "./ResearchCard";
 
-export default function RecentResearch() {
+interface RecentResearchProps {
+  projects: ResearchProject[];
+  isLoading: boolean;
+}
+
+export default function RecentResearch({
+  projects,
+  isLoading,
+}: RecentResearchProps) {
   return (
     <section className="mt-10">
       <div className="mb-5 flex items-center justify-between gap-3">
@@ -26,9 +34,13 @@ export default function RecentResearch() {
         </button>
       </div>
 
-      {researchProjects.length > 0 ? (
+      {isLoading ? (
+        <div className="rounded-2xl border border-white/[0.07] bg-[#101522] p-10 text-center text-sm text-gray-500">
+          Loading research runs...
+        </div>
+      ) : projects.length > 0 ? (
         <div className="space-y-4">
-          {researchProjects.map((project) => (
+          {projects.map((project) => (
             <ResearchCard
               key={project.id}
               project={project}
@@ -47,7 +59,7 @@ export default function RecentResearch() {
           </h3>
 
           <p className="mt-2 text-sm text-gray-500">
-            Start your first research run to see it here.
+            Start a research run to see its real results here.
           </p>
         </div>
       )}

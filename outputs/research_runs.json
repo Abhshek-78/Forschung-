@@ -1,0 +1,84 @@
+[
+  {
+    "id": "research-3520146e90",
+    "topic": "how to use cyptography to secure bank",
+    "status": "completed",
+    "papersFound": 9,
+    "papersRead": 3,
+    "evidenceChunks": 101,
+    "errors": 3,
+    "reportPath": "E:\\Forschung-\\outputs\\how_to_use_cyptography_to_secure_bank_research_report.md",
+    "createdAt": "2026-10-15T18:19:22.916096+00:00",
+    "pdfPath": "E:\\Forschung-\\outputs\\how_to_use_cyptography_to_secure_bank_research_report.pdf"
+  },
+  {
+    "id": "research-727b4cfc77",
+    "topic": "how to apply docker in containerization",
+    "status": "failed",
+    "papersFound": 0,
+    "papersRead": 0,
+    "evidenceChunks": 0,
+    "errors": 1,
+    "reportPath": null,
+    "createdAt": "2026-10-15T18:10:29.153239+00:00",
+    "error": "'charmap' codec can't encode character '\\u26a0' in position 2: character maps to <undefined>"
+  },
+  {
+    "id": "research-e3e6206fa5",
+    "topic": "how to apply bitcoin to transfer secure transection",
+    "status": "failed",
+    "papersFound": 0,
+    "papersRead": 0,
+    "evidenceChunks": 0,
+    "errors": 1,
+    "reportPath": null,
+    "createdAt": "2026-10-15T18:08:43.616419+00:00",
+    "error": "'charmap' codec can't encode character '\\u26a0' in position 2: character maps to <undefined>"
+  },
+  {
+    "id": "research-4e446d444a",
+    "topic": "how to use statelite to connect any device  through internet",
+    "status": "failed",
+    "papersFound": 0,
+    "papersRead": 0,
+    "evidenceChunks": 0,
+    "errors": 1,
+    "reportPath": null,
+    "createdAt": "2026-10-15T18:06:12.848915+00:00",
+    "error": "'charmap' codec can't encode character '\\u26a0' in position 2: character maps to <undefined>"
+  },
+  {
+    "id": "research-91295f2b78",
+    "topic": "how to CI/CD pipeline help in deployment",
+    "status": "completed",
+    "papersFound": 9,
+    "papersRead": 6,
+    "evidenceChunks": 56,
+    "errors": 0,
+    "reportPath": "outputs\\how_to_CI_CD_pipeline_help_in_deployment_research_report.md",
+    "createdAt": "2026-10-15T17:52:19.439818+00:00",
+    "pdfPath": "outputs\\how_to_CI_CD_pipeline_help_in_deployment_research_report.pdf"
+  },
+  {
+    "id": "research-1c2092b525",
+    "topic": "how to optimize ai model",
+    "status": "completed",
+    "papersFound": 9,
+    "papersRead": 4,
+    "evidenceChunks": 144,
+    "errors": 2,
+    "reportPath": "outputs\\how_to_optimize_ai_model_research_report.md",
+    "createdAt": "2026-10-15T17:36:33.082712+00:00"
+  },
+  {
+    "id": "research-5ce0ab9e4b",
+    "topic": "how to  use ml pipeline in compiler so it efficiency increase",
+    "status": "completed",
+    "papersFound": 9,
+    "papersRead": 6,
+    "evidenceChunks": 145,
+    "errors": 0,
+    "reportPath": "outputs\\how_to__use_ml_pipeline_in_compiler_so_it_efficiency_increase_research_report.md",
+    "createdAt": "2026-10-15T15:19:32.122403+00:00"
+  }
+]

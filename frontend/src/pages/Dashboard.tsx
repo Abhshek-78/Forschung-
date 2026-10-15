@@ -7,16 +7,43 @@ import {
   Microscope,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const navigate = useNavigate();
+import { useEffect, useState } from "react";
 
 import Sidebar from "../components/layout/Sidebar";
 import Header from "../components/layout/Header";
 import StatCard from "../components/dashboard/StatCard";
 import RecentResearch from "../components/dashboard/RecentResearch";
 
-import { researchProjects } from "../data/research";
+import {
+  fetchResearchProjects,
+  type ResearchProject,
+} from "../data/research";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [researchProjects, setResearchProjects] = useState<ResearchProject[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchResearchProjects()
+      .then((projects) => {
+        if (!cancelled) setResearchProjects(projects);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : "Could not load research");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const totalRuns = researchProjects.length;
 
   const totalPapers = researchProjects.reduce(
@@ -69,6 +96,7 @@ export default function Dashboard() {
 
                 <button
                   type="button"
+                  onClick={() => navigate("/new")}
                   className="mt-7 inline-flex items-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:-translate-y-0.5 hover:bg-indigo-400"
                 >
                   <Sparkles size={17} />
@@ -79,6 +107,13 @@ export default function Dashboard() {
                 </button>
               </div>
             </section>
+
+            {loadError && (
+              <div className="mt-6 rounded-xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200">
+                {loadError}. Start the backend with{" "}
+                <code>python main.py --server</code>.
+              </div>
+            )}
 
             {/* Statistics */}
             <section className="mt-8">
@@ -96,7 +131,7 @@ export default function Dashboard() {
                 <StatCard
                   title="Research Runs"
                   value={totalRuns}
-                  description="Projects in this sample"
+                  description="Research runs in this workspace"
                   icon={Microscope}
                 />
 
@@ -124,7 +159,10 @@ export default function Dashboard() {
             </section>
 
             {/* Recent research */}
-            <RecentResearch />
+            <RecentResearch
+              projects={researchProjects}
+              isLoading={isLoading}
+            />
 
             {/* Footer */}
             <footer className="mt-12 border-t border-white/[0.06] py-6 text-center text-xs text-gray-600">
